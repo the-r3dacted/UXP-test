@@ -23,7 +23,7 @@ public:
      * CriticalSection
      * @param aName A name which can reference this monitor
      */
-    CriticalSection(const char* aName)
+    explicit CriticalSection(const char* aName)
     {
       ::InitializeCriticalSection(&mCriticalSection);
     }
@@ -77,16 +77,16 @@ public:
      * Constructor
      * The constructor aquires the given lock.  The destructor
      * releases the lock.
-     * 
-     * @param aCriticalSection A valid mozilla::CriticalSection*. 
+     *
+     * @param aCriticalSection A valid mozilla::CriticalSection*.
      **/
-    CriticalSectionAutoEnter(mozilla::CriticalSection &aCriticalSection) :
+    explicit CriticalSectionAutoEnter(mozilla::CriticalSection &aCriticalSection) :
         mCriticalSection(&aCriticalSection)
     {
         assert(mCriticalSection);
         mCriticalSection->Enter();
     }
-    
+
     ~CriticalSectionAutoEnter(void)
     {
         mCriticalSection->Leave();

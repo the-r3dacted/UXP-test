@@ -57,9 +57,7 @@
 #include "mozilla/Sprintf.h"
 
 #include "webrtc/common_types.h"
-#include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/video_engine/include/vie_errors.h"
 
 #include "logging.h"
 
@@ -93,7 +91,7 @@ public:
                                      VideoType aVideoType,
                                      uint64_t aCaptureTime) = 0;
 
-  virtual void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame) = 0;
+  virtual void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame) = 0;
 
 protected:
   virtual ~VideoConverterListener() {}
@@ -249,7 +247,7 @@ protected:
     }
   }
 
-  void VideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame)
+  void VideoFrameConverted(webrtc::VideoFrame& aVideoFrame)
   {
     MutexAutoLock lock(mMutex);
 
@@ -317,7 +315,7 @@ protected:
 
       if (destFormat != mozilla::kVideoI420) {
         unsigned char *video_frame = static_cast<unsigned char*>(basePtr);
-        webrtc::I420VideoFrame i420_frame;
+        webrtc::VideoFrame i420_frame;
         int stride_y = width;
         int stride_uv = (width + 1) / 2;
         int target_width = width;
@@ -366,7 +364,7 @@ protected:
         uint32_t width = yuv->GetSize().width;
         uint32_t height = yuv->GetSize().height;
 
-        webrtc::I420VideoFrame i420_frame;
+        webrtc::VideoFrame i420_frame;
         int rv = i420_frame.CreateFrame(y, cb, cr, width, height,
                                         yStride, cbCrStride, cbCrStride,
                                         webrtc::kVideoRotation_0);
@@ -400,11 +398,11 @@ protected:
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
     int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-    auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size);
+    auto yuv_scoped = MakeUniqueFallible<uint8_t[]>(buffer_size);
     if (!yuv_scoped) {
       return;
     }
-    uint8* yuv = yuv_scoped.get();
+    uint8_t* yuv = yuv_scoped.get();
 
     DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
     if (!map.IsMapped()) {
@@ -420,7 +418,7 @@ protected:
     switch (surf->GetFormat()) {
       case SurfaceFormat::B8G8R8A8:
       case SurfaceFormat::B8G8R8X8:
-        rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+        rv = libyuv::ARGBToI420(static_cast<uint8_t*>(map.GetData()),
                                 map.GetStride(),
                                 yuv, size.width,
                                 yuv + cb_offset, half_width,
@@ -428,7 +426,7 @@ protected:
                                 size.width, size.height);
         break;
       case SurfaceFormat::R5G6B5_UINT16:
-        rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+        rv = libyuv::RGB565ToI420(static_cast<uint8_t*>(map.GetData()),
                                   map.GetStride(),
                                   yuv, size.width,
                                   yuv + cb_offset, half_width,
@@ -747,25 +745,24 @@ MediaPipeline::UpdateTransport_s(int level,
 void
 MediaPipeline::SelectSsrc_m(size_t ssrc_index)
 {
-  RUN_ON_THREAD(sts_thread_,
-                WrapRunnable(
-                    this,
-                    &MediaPipeline::SelectSsrc_s,
-                    ssrc_index),
-                NS_DISPATCH_NORMAL);
+  if (ssrc_index < ssrcs_received_.size()) {
+    uint32_t ssrc = ssrcs_received_[ssrc_index];
+    RUN_ON_THREAD(sts_thread_,
+                  WrapRunnable(
+                               this,
+                               &MediaPipeline::SelectSsrc_s,
+                               ssrc),
+                  NS_DISPATCH_NORMAL);
+
+    conduit_->SetRemoteSSRC(ssrc);
+  }
 }
 
 void
-MediaPipeline::SelectSsrc_s(size_t ssrc_index)
+MediaPipeline::SelectSsrc_s(uint32_t ssrc)
 {
   filter_ = new MediaPipelineFilter;
-  if (ssrc_index < ssrcs_received_.size()) {
-    filter_->AddRemoteSSRC(ssrcs_received_[ssrc_index]);
-  } else {
-    MOZ_MTLOG(ML_WARNING, "SelectSsrc called with " << ssrc_index << " but we "
-                          << "have only seen " << ssrcs_received_.size()
-                          << " ssrcs");
-  }
+  filter_->AddRemoteSSRC(ssrc);
 }
 
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
@@ -1274,7 +1271,7 @@ public:
       aVideoFrame, aVideoFrameLength, aWidth, aHeight, aVideoType, aCaptureTime);
   }
 
-  void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame)
+  void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame)
   {
     MOZ_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
     static_cast<VideoSessionConduit*>(conduit_.get())->SendVideoFrame(aVideoFrame);
@@ -1370,7 +1367,7 @@ public:
                                      aWidth, aHeight, aVideoType, aCaptureTime);
   }
 
-  void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame) override
+  void OnVideoFrameConverted(webrtc::VideoFrame& aVideoFrame) override
   {
     MutexAutoLock lock(mutex_);
 
@@ -1606,19 +1603,18 @@ MediaPipeline::TransportInfo* MediaPipeline::GetTransportInfo_s(
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtpPacket(
-    const void *data, int len) {
+    const uint8_t* data, size_t len) {
 
-    nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
-                                             len, len + SRTP_MAX_EXPANSION));
+  nsAutoPtr<DataBuffer> buf(new DataBuffer(data, len, len + SRTP_MAX_EXPANSION));
 
-    RUN_ON_THREAD(sts_thread_,
-                  WrapRunnable(
-                      RefPtr<MediaPipeline::PipelineTransport>(this),
-                      &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
-                      buf, true),
-                  NS_DISPATCH_NORMAL);
+  RUN_ON_THREAD(sts_thread_,
+                WrapRunnable(
+                             RefPtr<MediaPipeline::PipelineTransport>(this),
+                             &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                             buf, true),
+                NS_DISPATCH_NORMAL);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
@@ -1673,19 +1669,18 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(
-    const void *data, int len) {
+    const uint8_t* data, size_t len) {
 
-    nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t *>(data),
-                                             len, len + SRTP_MAX_EXPANSION));
+  nsAutoPtr<DataBuffer> buf(new DataBuffer(data, len, len + SRTP_MAX_EXPANSION));
 
-    RUN_ON_THREAD(sts_thread_,
-                  WrapRunnable(
-                      RefPtr<MediaPipeline::PipelineTransport>(this),
-                      &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
-                      buf, false),
-                  NS_DISPATCH_NORMAL);
+  RUN_ON_THREAD(sts_thread_,
+                WrapRunnable(
+                             RefPtr<MediaPipeline::PipelineTransport>(this),
+                             &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                             buf, false),
+                NS_DISPATCH_NORMAL);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 void MediaPipelineTransmit::PipelineListener::
@@ -2170,12 +2165,14 @@ public:
   {
 #ifdef MOZILLA_INTERNAL_API
     ReentrantMonitorAutoEnter enter(monitor_);
-#endif // MOZILLA_INTERNAL_API
 
-#if defined(MOZILLA_INTERNAL_API)
     if (buffer) {
       // Create a video frame using |buffer|.
+#ifdef MOZ_WIDGET_GONK
+      RefPtr<PlanarYCbCrImage> yuvImage = new GrallocImage();
+#else
       RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
+#endif // MOZ_WIDGET_GONK
       uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
 
       PlanarYCbCrData yuvData;
