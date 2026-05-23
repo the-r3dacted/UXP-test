@@ -177,6 +177,9 @@ struct hvarvvar_subset_plan_t
 
     inner_maps.resize (var_store->get_sub_table_count ());
 
+    for (unsigned int i = 0; i < inner_maps.length; i++)
+      inner_maps[i].init ();
+
     if (unlikely (!index_map_plans.length || !inner_sets.length || !inner_maps.length)) return;
 
     bool retain_adv_map = false;
@@ -226,8 +229,8 @@ struct hvarvvar_subset_plan_t
     for (unsigned int i = 0; i < inner_sets.length; i++)
       hb_set_destroy (inner_sets[i]);
     hb_set_destroy (adv_set);
-    inner_maps.fini ();
-    index_map_plans.fini ();
+    inner_maps.fini_deep ();
+    index_map_plans.fini_deep ();
   }
 
   hb_inc_bimap_t outer_map;
@@ -319,27 +322,23 @@ struct HVARVVAR
 						hvar_plan.index_map_plans.as_array ()));
   }
 
-  float get_advance_delta_unscaled (hb_codepoint_t  glyph,
-				    const int *coords, unsigned int coord_count,
-				    VariationStore::cache_t *store_cache = nullptr) const
+  float get_advance_var (hb_codepoint_t glyph, hb_font_t *font) const
   {
     uint32_t varidx = (this+advMap).map (glyph);
-    return (this+varStore).get_delta (varidx,
-				      coords, coord_count,
-				      store_cache);
+    return (this+varStore).get_delta (varidx, font->coords, font->num_coords);
   }
 
-  bool get_lsb_delta_unscaled (hb_codepoint_t glyph,
-			       const int *coords, unsigned int coord_count,
-			       float *lsb) const
+  float get_side_bearing_var (hb_codepoint_t glyph,
+			      const int *coords, unsigned int coord_count) const
   {
-    if (!lsbMap) return false;
+    if (!has_side_bearing_deltas ()) return 0.f;
     uint32_t varidx = (this+lsbMap).map (glyph);
-    *lsb = (this+varStore).get_delta (varidx, coords, coord_count);
-    return true;
+    return (this+varStore).get_delta (varidx, coords, coord_count);
   }
 
-  public:
+  bool has_side_bearing_deltas () const { return lsbMap && rsbMap; }
+
+  protected:
   FixedVersion<>version;	/* Version of the metrics variation table
 				 * initially set to 0x00010000u */
   Offset32To<VariationStore>
@@ -390,16 +389,6 @@ struct VVAR : HVARVVAR {
   }
 
   bool subset (hb_subset_context_t *c) const { return HVARVVAR::_subset<VVAR> (c); }
-
-  bool get_vorg_delta_unscaled (hb_codepoint_t glyph,
-				const int *coords, unsigned int coord_count,
-				float *delta) const
-  {
-    if (!vorgMap) return false;
-    uint32_t varidx = (this+vorgMap).map (glyph);
-    *delta = (this+varStore).get_delta (varidx, coords, coord_count);
-    return true;
-  }
 
   protected:
   Offset32To<DeltaSetIndexMap>

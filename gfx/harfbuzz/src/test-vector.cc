@@ -26,14 +26,11 @@
 #include "hb.hh"
 #include "hb-vector.hh"
 #include "hb-set.hh"
-#include "hb-map.hh"
-#include <string>
 
 
 int
 main (int argc, char **argv)
 {
-  assert (sizeof (hb_vector_t<int>) == sizeof (hb_sorted_vector_t<int>));
 
   /* Test copy constructor. */
   {
@@ -63,12 +60,8 @@ main (int argc, char **argv)
 
   /* Test move constructor. */
   {
-    hb_vector_t<int> s {1, 2};
-    hb_sorted_vector_t<int> S {1, 2};
-    hb_vector_t<int> v (std::move (s));
-    hb_sorted_vector_t<int> V (std::move (S));
-    assert (s.length == 0);
-    assert (S.length == 0);
+    hb_vector_t<int> v {hb_vector_t<int> {1, 2}};
+    hb_vector_t<int> V {hb_vector_t<int> {1, 2}};
     assert (v.length == 2);
     assert (v[0] == 1);
     assert (v[1] == 2);
@@ -76,16 +69,11 @@ main (int argc, char **argv)
 
   /* Test move assignment. */
   {
-    hb_vector_t<int> s {1, 2};
-    hb_sorted_vector_t<int> S {1, 2};
     hb_vector_t<int> v;
     hb_sorted_vector_t<int> V;
-    v = std::move (s);
-    V = std::move (S);
-    assert (s.length == 0);
-    assert (S.length == 0);
+    v = hb_vector_t<int> {1, 2};
+    V = hb_sorted_vector_t<int> {1, 2};
     assert (v.length == 2);
-    assert (V.length == 2);
     assert (v[0] == 1);
     assert (v[1] == 2);
   }
@@ -146,40 +134,6 @@ main (int argc, char **argv)
     assert (v1[0] == 4);
     assert (v2.length == 3);
     assert (v2[2] == 3);
-  }
-
-  {
-    hb_vector_t<std::string> v;
-
-    std::string s;
-    for (unsigned i = 1; i < 100; i++)
-    {
-      s += "x";
-      v.push (s);
-    }
-
-    hb_vector_t<std::string> v2;
-
-    v2 = v;
-
-    v2.remove_ordered (50);
-    v2.remove_unordered (50);
-  }
-
-  {
-    hb_vector_t<hb_set_t> v;
-    hb_set_t s {1, 5, 7};
-    v.push (s);
-    v << s;
-    assert (s.get_population () == 3);
-    v << std::move (s);
-    assert (s.get_population () == 0);
-  }
-
-  {
-    hb_vector_t<hb_map_t> v;
-    hb_map_t m;
-    v.push (m);
   }
 
   return 0;

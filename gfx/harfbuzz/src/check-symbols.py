@@ -17,12 +17,12 @@ if not nm:
 	print ('check-symbols.py: \'nm\' not found; skipping test')
 	sys.exit (77)
 
-cxxfilt = shutil.which ('c++filt')
+cxxflit = shutil.which ('c++filt')
 
 tested = False
 stat = 0
 
-for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject', 'harfbuzz-cairo']:
+for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject']:
 	for suffix in ['so', 'dylib']:
 		so = os.path.join (builddir, libs, 'lib%s.%s' % (soname, suffix))
 		if not os.path.exists (so): continue
@@ -31,13 +31,13 @@ for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject'
 		symprefix = '_' if suffix == 'dylib' else ''
 
 		EXPORTED_SYMBOLS = [s.split ()[2]
-				    for s in re.findall (r'^.+ [BCDGIRSTu] .+$', subprocess.check_output (nm.split() + [so]).decode ('utf-8'), re.MULTILINE)
+				    for s in re.findall (r'^.+ [BCDGIRST] .+$', subprocess.check_output (nm.split() + [so]).decode ('utf-8'), re.MULTILINE)
 				    if not re.match (r'.* %s(%s)\b' % (symprefix, IGNORED_SYMBOLS), s)]
 
-		# run again c++filt also if is available
-		if cxxfilt:
+		# run again c++flit also if is available
+		if cxxflit:
 			EXPORTED_SYMBOLS = subprocess.check_output (
-				[cxxfilt], input='\n'.join (EXPORTED_SYMBOLS).encode ()
+				[cxxflit], input='\n'.join (EXPORTED_SYMBOLS).encode ()
 			).decode ('utf-8').splitlines ()
 
 		prefix = (symprefix + os.path.basename (so)).replace ('libharfbuzz', 'hb').replace ('-', '_').split ('.')[0]

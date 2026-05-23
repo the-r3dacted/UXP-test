@@ -105,9 +105,12 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
   unsigned int
   modified_combining_class (hb_codepoint_t u)
   {
-    /* Reorder SAKOT to ensure it comes after any tone marks. */
+    /* XXX This hack belongs to the USE shaper (for Tai Tham):
+     * Reorder SAKOT to ensure it comes after any tone marks. */
     if (unlikely (u == 0x1A60u)) return 254;
-    /* Reorder PADMA to ensure it comes after any vowel marks. */
+
+    /* XXX This hack belongs to the Tibetan shaper:
+     * Reorder PADMA to ensure it comes after any vowel marks. */
     if (unlikely (u == 0x0FC6u)) return 254;
     /* Reorder TSA -PHRU to reorder before U+0F74 */
     if (unlikely (u == 0x0F39u)) return 127;

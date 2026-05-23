@@ -73,9 +73,17 @@ test_extract ()
   assert (queue.is_empty ());
 }
 
+static void
+test_extract_empty ()
+{
+  hb_priority_queue_t queue;
+  assert (queue.pop_minimum () == hb_pair (0, 0));
+}
+
 int
 main (int argc, char **argv)
 {
   test_insert ();
   test_extract ();
+  test_extract_empty ();
 }
