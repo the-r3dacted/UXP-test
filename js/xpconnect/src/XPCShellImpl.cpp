@@ -942,7 +942,7 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
             break;
         case 'S':
             ContextOptionsRef(cx).toggleWerror();
-            [[fallthrough]]; // because -S implies -s
+            MOZ_FALLTHROUGH; // because -S implies -s
         case 's':
             ContextOptionsRef(cx).toggleExtraWarnings();
             break;

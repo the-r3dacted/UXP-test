@@ -5729,7 +5729,7 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
       if (ShadowRoot::FromNode(imported)) {
         break;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case nsIDOMNode::ATTRIBUTE_NODE:
     case nsIDOMNode::ELEMENT_NODE:
@@ -6835,7 +6835,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
         rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
         return nullptr;
       }
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     }
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
@@ -7126,7 +7126,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     mValidMaxScale = !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
 
     mViewportType = Specified;
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   }
   case Specified:
   default:

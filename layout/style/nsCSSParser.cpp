@@ -4639,7 +4639,7 @@ CSSParserImpl::ParseKeyframeSelectorList(InfallibleTArray<float>& aSelectorList)
           value = 1.0f;
           break;
         }
-        [[fallthrough]];
+        MOZ_FALLTHROUGH;
       default:
         UngetToken();
         // The first time through the loop, this means we got an empty
@@ -11343,7 +11343,7 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
       haveGradientLine = true;
       break;
     }
-    [[fallthrough]];
+    MOZ_FALLTHROUGH;
   case eCSSToken_ID:
   case eCSSToken_Hash:
     // this is a color
@@ -12037,10 +12037,10 @@ CSSParserImpl::ParseBoxProperties(const nsCSSPropertyID aPropIDs[])
   switch (count) {
     case 1: // Make right == top
       result.mRight = result.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 2: // Make bottom == top
       result.mBottom = result.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 3: // Make left == right
       result.mLeft = result.mRight;
   }
@@ -12110,10 +12110,10 @@ CSSParserImpl::ParseGroupedBoxProperty(int32_t aVariantMask,
   switch (count) {
     case 1: // Make right == top
       result.mRight = result.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 2: // Make bottom == top
       result.mBottom = result.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 3: // Make left == right
       result.mLeft = result.mRight;
   }
@@ -12214,10 +12214,10 @@ CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
   switch (countX) {
     case 1: // Make top-right same as top-left
       dimenX.mRight = dimenX.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 2: // Make bottom-right same as top-left
       dimenX.mBottom = dimenX.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 3: // Make bottom-left same as top-right
       dimenX.mLeft = dimenX.mRight;
   }
@@ -12225,10 +12225,10 @@ CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
   switch (countY) {
     case 1: // Make top-right same as top-left
       dimenY.mRight = dimenY.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 2: // Make bottom-right same as top-left
       dimenY.mBottom = dimenY.mTop;
-      [[fallthrough]];
+      MOZ_FALLTHROUGH;
     case 3: // Make bottom-left same as top-right
       dimenY.mLeft = dimenY.mRight;
   }
