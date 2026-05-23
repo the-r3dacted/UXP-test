@@ -3294,7 +3294,12 @@ XPCJSContext::Initialize()
                                           180 * 1024 : // win64
                                           120 * 1024;  // win32
 #endif //MOZ_ASAN
-
+#elif defined(ANDROID)
+    // Android appears to have 1MB stacks. Allow the use of 3/4 of that size
+    // (768KB on 32-bit), since otherwise we can crash with a stack overflow
+    // when nearing the 1MB limit.
+    const size_t kStackQuota = kDefaultStackQuota + kDefaultStackQuota / 2;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
     // We're not on Windows, Linux, Solaris or Mac/Darwin
     // Catch-all configuration for other environments.
