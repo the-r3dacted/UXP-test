@@ -10,7 +10,7 @@
 #include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "mozpkix/pkixnss.h"
+#include "pkix/pkixnss.h"
 
 using namespace mozilla::pkix;
 

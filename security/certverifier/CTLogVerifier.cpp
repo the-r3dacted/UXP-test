@@ -9,8 +9,8 @@
 #include "hasht.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixutil.h"
+#include "pkix/pkixnss.h"
+#include "pkix/pkixutil.h"
 
 namespace mozilla { namespace ct {
 

@@ -6,7 +6,7 @@
 #ifndef CSTrustDomain_h
 #define CSTrustDomain_h
 
-#include "mozpkix/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
