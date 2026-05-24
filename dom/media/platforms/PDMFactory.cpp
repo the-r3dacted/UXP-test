@@ -18,9 +18,7 @@
 #ifdef MOZ_APPLEMEDIA
 #include "AppleDecoderModule.h"
 #endif
-#ifdef MOZ_GMP
 #include "GMPDecoderModule.h"
-#endif
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SharedThreadPool.h"
@@ -222,11 +220,9 @@ PDMFactory::CreateDecoder(const CreateDecoderParams& aParams)
     if (mFFmpegFailedToLoad) {
       diagnostics->SetFFmpegFailedToLoad();
     }
-#ifdef MOZ_GMP
     if (mGMPPDMFailedToStartup) {
       diagnostics->SetGMPPDMFailedToStartup();
     }
-#endif
   }
 
   for (auto& current : mCurrentPDMs) {
@@ -387,14 +383,12 @@ PDMFactory::CreatePDMs()
   m = new AgnosticDecoderModule();
   StartupPDM(m);
 
-#ifdef MOZ_GMP
   if (MediaPrefs::PDMGMPEnabled()) {
     m = new GMPDecoderModule();
     mGMPPDMFailedToStartup = !StartupPDM(m);
   } else {
     mGMPPDMFailedToStartup = false;
   }
-#endif
 }
 
 void
@@ -427,11 +421,9 @@ PDMFactory::GetDecoder(const TrackInfo& aTrackInfo,
     if (mFFmpegFailedToLoad) {
       aDiagnostics->SetFFmpegFailedToLoad();
     }
-#ifdef MOZ_GMP
     if (mGMPPDMFailedToStartup) {
       aDiagnostics->SetGMPPDMFailedToStartup();
     }
-#endif
   }
 
   RefPtr<PlatformDecoderModule> pdm;

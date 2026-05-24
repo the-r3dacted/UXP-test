@@ -67,10 +67,8 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
-#ifdef MOZ_GMP
 #include "GMPProcessChild.h"
 #include "GMPLoader.h"
-#endif
 #include "mozilla/gfx/GPUProcessImpl.h"
 
 #include "GeckoProfiler.h"
@@ -95,11 +93,9 @@ using mozilla::dom::ContentProcess;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 
-#ifdef MOZ_GMP
 using mozilla::gmp::GMPLoader;
 using mozilla::gmp::CreateGMPLoader;
 using mozilla::gmp::GMPProcessChild;
-#endif
 
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
@@ -240,23 +236,17 @@ SetTaskbarGroupId(const nsString& aId)
 
 nsresult
 XRE_InitChildProcess(int aArgc,
-#ifdef MOZ_GMP
                      char* aArgv[],
                      const XREChildData* aChildData)
-#else
-                     char* aArgv[])
-#endif
 {
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
-#ifdef MOZ_GMP
   MOZ_ASSERT(aChildData);
 
   // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
   // and we must forward it through to the GMP code here.
   GMPProcessChild::SetGMPLoader(aChildData->gmpLoader.get());
-#endif
 
 #if defined(XP_WIN)
   // From the --attach-console support in nsNativeAppSupportWin.cpp, but
@@ -516,11 +506,7 @@ XRE_InitChildProcess(int aArgc,
         break;
 
       case GeckoProcessType_GMPlugin:
-#ifdef MOZ_GMP
         process = new gmp::GMPProcessChild(parentPID);
-#else
-        NS_RUNTIMEABORT("rebuild with Gecko Media Plugins enabled");
-#endif
         break;
 
       case GeckoProcessType_GPU:
