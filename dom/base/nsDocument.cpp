@@ -9648,7 +9648,6 @@ nsDocument::RemovePlugin(nsIObjectLoadingContent* aPlugin)
   mPlugins.RemoveEntry(aPlugin);
 }
 
-#ifdef MOZ_ENABLE_NPAPI
 static bool
 AllSubDocumentPluginEnum(nsIDocument* aDocument, void* userArg)
 {
@@ -9668,7 +9667,6 @@ nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
   }
   EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
 }
-#endif
 
 nsresult
 nsDocument::AddResponsiveContent(nsIContent* aContent)
