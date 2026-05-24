@@ -100,27 +100,10 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
 
     if refresh:
         log.info('Refreshing %s with %s', old_configure, autoconf)
-<<<<<<< HEAD
-        env = dict(environ)
-        env['M4'] = m4
-        env['AWK'] = awk
-        env['AC_MACRODIR'] = os.path.join(build_env.topsrcdir, 'build', 'autoconf')
-        my_env = env
-        # Handle Python 2.7 not allowing unicode in the environment on Windows
-        if sys.platform == 'win32':
-            my_env = dict()
-            for e in env:
-                my_env[e.encode('ascii','ignore')] = env[e].encode('ascii','ignore')
-        script = subprocess.check_output([
-            shell, autoconf,
-            '--localdir=%s' % os.path.dirname(old_configure),
-            old_configure + '.in'], env=my_env)
-=======
         script = subprocess.check_output([
             shell, autoconf,
             '--localdir=%s' % os.path.dirname(old_configure),
             old_configure + '.in'])
->>>>>>> parent of 6cbb2c372b (Issue #2512 - Part 1 - Imported minimal autoconf 2.13.)
 
         # Make old-configure append to config.log, where we put our own log.
         # This could be done with a m4 macro, but it's way easier this way
