@@ -644,14 +644,6 @@ public:
                                        subjectPublicKeyInfo, nullptr);
   }
 
-  Result VerifyRSAPSSSignedData(Input data,
-                                      DigestAlgorithm digestAlgorithm,
-                                      Input signature,
-                                      Input subjectPublicKeyInfo) override {
-    return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
-                                     subjectPublicKeyInfo, nullptr);
-  }
-
   Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
                                    override
   {
