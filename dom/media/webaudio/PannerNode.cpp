@@ -266,9 +266,9 @@ public:
   // thread untile mPanningModelFunction has changed, and this happens strictly
   // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
-  using PanningModelFunction = void (PannerNodeEngine::*)(const AudioBlock&, AudioBlock*, StreamTime);
+  typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
   PanningModelFunction mPanningModelFunction;
-  using DistanceModelFunction = float (PannerNodeEngine::*)(double);
+  typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
   DistanceModelFunction mDistanceModelFunction;
   AudioParamTimeline mPositionX;
   AudioParamTimeline mPositionY;
@@ -373,9 +373,7 @@ void PannerNode::DestroyMediaStream()
 float
 PannerNodeEngine::LinearGainFunction(double aDistance)
 {
-  double clampedRollof = std::clamp(mRolloffFactor, 0.0, 1.0);
-  return AssertedCast<float>(
-	1.0 - clampedRollof * (std::max(std::min(aDistance, mMaxDistance), mRefDistance) - mRefDistance) / (mMaxDistance - mRefDistance));
+  return 1 - mRolloffFactor * (std::max(std::min(aDistance, mMaxDistance), mRefDistance) - mRefDistance) / (mMaxDistance - mRefDistance);
 }
 
 float
