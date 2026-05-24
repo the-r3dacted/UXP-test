@@ -171,13 +171,11 @@ CSTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
 }
 
 Result
-CSTrustDomain::VerifyRSAPKCS1SignedData(Input data,
-                                        DigestAlgorithm digestAlgorithm,
-                                        Input signature,
-                                        Input subjectPublicKeyInfo)
+CSTrustDomain::VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                          Input subjectPublicKeyInfo)
 {
-  return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
-                                     subjectPublicKeyInfo, nullptr);
+  return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                       nullptr);
 }
 
 Result
@@ -195,13 +193,11 @@ CSTrustDomain::CheckECDSACurveIsAcceptable(EndEntityOrCA endEntityOrCA,
 }
 
 Result
-CSTrustDomain::VerifyECDSASignedData(Input data,
-                                     DigestAlgorithm digestAlgorithm,
-                                     Input signature,
-                                     Input subjectPublicKeyInfo)
+CSTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                       Input subjectPublicKeyInfo)
 {
-  return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
-                                  subjectPublicKeyInfo, nullptr);
+  return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
+                                    nullptr);
 }
 
 Result
