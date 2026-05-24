@@ -2377,7 +2377,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
             offset.QuadPart += me->md.blocked_io_bytes;
 
             SetFilePointer((HANDLE)f, offset.LowPart, &offset.HighPart, FILE_BEGIN);
-
+    
             PR_ASSERT(me->io_pending == PR_FALSE);
 
             return me->md.blocked_io_bytes;
