@@ -13,6 +13,8 @@ const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+const ABOUT_NEWTAB_SEGREGATION_PREF = "privacy.usercontext.about_newtab_segregation.enabled";
+
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -20,6 +22,8 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 const global = this;
 
 // contains base64 version of a placeholder thumbnail
@@ -118,6 +122,14 @@ const BackgroundPageThumbs = {
   }),
 
   /**
+   * Tell the service that the thumbnail browser should be recreated at next
+   * call of _ensureBrowser().
+   */
+  renewThumbnailBrowser: function() {
+    this._renewThumbBrowser = true;
+  },
+
+  /**
    * Ensures that initialization of the thumbnail browser's parent window has
    * begun.
    *
@@ -172,8 +184,11 @@ const BackgroundPageThumbs = {
    * Creates the thumbnail browser if it doesn't already exist.
    */
   _ensureBrowser: function () {
-    if (this._thumbBrowser)
+    if (this._thumbBrowser && !this._renewThumbBrowser)
       return;
+
+    this._destroyBrowser();
+    this._renewThumbBrowser = false;
 
     let browser = this._parentWin.document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
@@ -182,6 +197,13 @@ const BackgroundPageThumbs = {
     if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
         Services.prefs.getBoolPref("browser.tabs.remote")) {
       browser.setAttribute("remote", "true");
+    }
+
+    if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
+      // Use the private container for thumbnails.
+      let privateIdentity =
+        ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
+      browser.setAttribute("usercontextid", privateIdentity.userContextId);
     }
 
     // Size the browser.  Make its aspect ratio the same as the canvases' that
@@ -282,6 +304,14 @@ const BackgroundPageThumbs = {
 
   _destroyBrowserTimeout: DESTROY_BROWSER_TIMEOUT,
 };
+
+Services.prefs.addObserver(ABOUT_NEWTAB_SEGREGATION_PREF,
+  function(aSubject, aTopic, aData) {
+    if (aTopic == "nsPref:changed" && aData == ABOUT_NEWTAB_SEGREGATION_PREF) {
+      BackgroundPageThumbs.renewThumbnailBrowser();
+    }
+  },
+  false);
 
 Object.defineProperty(this, "BackgroundPageThumbs", {
   value: BackgroundPageThumbs,
@@ -398,6 +428,14 @@ Capture.prototype = {
         catch (err) {
           Cu.reportError(err);
         }
+      }
+
+      if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
+        // Clear the data in the private container for thumbnails.
+        let privateIdentity =
+          ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
+        Services.obs.notifyObservers(null, "clear-origin-attributes-data",
+          JSON.stringify({ userContextId: privateIdentity.userContextId }));
       }
     };
 
