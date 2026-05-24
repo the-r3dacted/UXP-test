@@ -60,8 +60,6 @@
 
 #ifdef MOZ_ENABLE_NPAPI
 #include "mozilla/plugins/PluginProcessChild.h"
-#else
-#include "mozilla/ipc/CrossProcessMutex.h"
 #endif
 #include "mozilla/dom/ContentProcess.h"
 #include "mozilla/dom/ContentParent.h"

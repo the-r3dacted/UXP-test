@@ -168,7 +168,6 @@ HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
   if (aFocus) {
     nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aElement);
     bool hasRunningPlugin = false;
-#ifdef MOZ_ENABLE_NPAPI
     if (olc) {
       // nsIObjectLoadingContent::GetHasRunningPlugin() fails when
       // nsContentUtils::IsCallerChrome() returns false (which it can do even
@@ -177,7 +176,6 @@ HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
       hasRunningPlugin =
         static_cast<nsObjectLoadingContent*>(olc.get())->HasRunningPlugin();
     }
-#endif
     if (!hasRunningPlugin) {
       aFocus = false;
     }
