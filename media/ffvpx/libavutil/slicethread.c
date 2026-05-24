@@ -17,14 +17,10 @@
  */
 
 #include <stdatomic.h>
-#include "cpu.h"
-#include "internal.h"
 #include "slicethread.h"
 #include "mem.h"
 #include "thread.h"
 #include "avassert.h"
-
-#define MAX_AUTO_THREADS 16
 
 #if HAVE_PTHREADS || HAVE_W32THREADS || HAVE_OS2THREADS
 
@@ -104,11 +100,15 @@ int avpriv_slicethread_create(AVSliceThread **pctx, void *priv,
     int nb_workers, i;
     int ret;
 
+#if HAVE_W32THREADS
+    w32thread_init();
+#endif
+
     av_assert0(nb_threads >= 0);
     if (!nb_threads) {
         int nb_cpus = av_cpu_count();
         if (nb_cpus > 1)
-            nb_threads = FFMIN(nb_cpus + 1, MAX_AUTO_THREADS);
+            nb_threads = nb_cpus + 1;
         else
             nb_threads = 1;
     }
@@ -265,7 +265,7 @@ int avpriv_slicethread_create(AVSliceThread **pctx, void *priv,
                               int nb_threads)
 {
     *pctx = NULL;
-    return AVERROR(ENOSYS);
+    return AVERROR(EINVAL);
 }
 
 void avpriv_slicethread_execute(AVSliceThread *ctx, int nb_jobs, int execute_main)
