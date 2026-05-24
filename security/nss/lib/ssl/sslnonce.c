@@ -16,7 +16,7 @@
 #include "sslproto.h"
 #include "nssilock.h"
 #include "sslencode.h"
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS) || defined(XP_BEOS)
 #include <time.h>
 #endif
 
@@ -1123,13 +1123,12 @@ ssl_CacheSessionID(sslSocket *ss)
 {
     sslSecurityInfo *sec = &ss->sec;
     PORT_Assert(sec);
-    PORT_Assert(sec->ci.sid->cached == never_cached);
 
     if (sec->ci.sid && !sec->ci.sid->u.ssl3.keys.resumable) {
         return;
     }
 
-    if (!sec->isServer && ss->resumptionTokenCallback) {
+    if (!ss->sec.isServer && ss->resumptionTokenCallback) {
         ssl_CacheExternalToken(ss);
         return;
     }
